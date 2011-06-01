@@ -17,28 +17,47 @@ package jdave.tools;
 
 /**
  * @author Joni Freeman
+ * @author Tommi Reiman
  */
 public class Sentence {
     private final String sentence;
 
     private Sentence(String sentence) {
-        this.sentence = sentence;        
+        this.sentence = sentence;
     }
-    
+
     public static Sentence fromCamelCase(String s) {
-        StringBuilder sentence = new StringBuilder();        
+        StringBuilder sentence = new StringBuilder();
+        boolean inNumber = false;
         for (int pos = 0; pos < s.length(); pos++) {
             char ch = s.charAt(pos);
-            if (pos > 0 && Character.isUpperCase(ch)) {
-                sentence.append(" ");
-                sentence.append(Character.toLowerCase(ch));
-            } else {
+            if (isDigit(pos, ch)) {
+                if (!inNumber) {
+                    sentence.append(" ");
+                }
                 sentence.append(ch);
+                inNumber = true;
+            } else {
+                if (isUpperCase(pos, ch) || inNumber) {
+                    sentence.append(" ");
+                    sentence.append(Character.toLowerCase(ch));
+                } else {
+                    sentence.append(ch);
+                }
+                inNumber = false;
             }
         }
-        return new Sentence(sentence.toString());
+        return new Sentence(sentence.toString().trim());
     }
-    
+
+    private static boolean isDigit(int pos, char ch) {
+        return Character.isDigit(ch);
+    }
+
+    private static boolean isUpperCase(int pos, char ch) {
+        return pos > 0 && Character.isUpperCase(ch);
+    }
+
     @Override
     public String toString() {
         return sentence;
