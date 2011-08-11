@@ -40,7 +40,7 @@ public abstract class DictionaryPanel extends Panel {
     public DictionaryPanel(String id) {
         super(id);
         add(new FeedbackPanel("feedback"));
-        add(new Form("form") {
+        add(new Form<Void>("form") {
             {
                 add(new TextField<String>("query", new PropertyModel<String>(DictionaryPanel.this, "query")));
             }

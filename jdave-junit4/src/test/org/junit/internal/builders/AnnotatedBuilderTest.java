@@ -124,7 +124,7 @@ public class AnnotatedBuilderTest {
     }
 
     public static class FakeRunner extends Runner {
-        public FakeRunner(@SuppressWarnings("unused")
+        public FakeRunner(
         final Class<?> testClass) {
         }
 
@@ -139,9 +139,7 @@ public class AnnotatedBuilderTest {
     }
 
     public static class FakeRunnerThatRequiresSuiteBuilder extends Runner {
-        public FakeRunnerThatRequiresSuiteBuilder(@SuppressWarnings("unused")
-        final Class<?> testClass, @SuppressWarnings("unused")
-        final RunnerBuilder suiteBilder) {
+        public FakeRunnerThatRequiresSuiteBuilder(final Class<?> testClass, final RunnerBuilder suiteBilder) {
         }
 
         @Override

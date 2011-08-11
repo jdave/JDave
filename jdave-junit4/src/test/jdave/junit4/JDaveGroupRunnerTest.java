@@ -18,7 +18,6 @@ package jdave.junit4;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import jdave.Group;
 import jdave.Specification;

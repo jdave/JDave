@@ -39,7 +39,7 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 import org.apache.wicket.util.tester.BaseWicketTester;
 import org.apache.wicket.util.tester.ITestPageSource;
-import org.apache.wicket.util.tester.TestPanelSource;
+import org.apache.wicket.util.tester.ITestPanelSource;
 import org.apache.wicket.util.tester.BaseWicketTester.DummyWebApplication;
 
 /**
@@ -178,7 +178,7 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
     }
 
     protected void startBorder(final IModel<M> model) {
-        wicket.startPanel(new TestPanelSource() {
+        wicket.startPanel(new ITestPanelSource() {
             public Panel getTestPanel(final String panelId) {
                 final Panel panel = new Container(panelId);
                 specifiedComponent = newComponent("component", model);
@@ -189,7 +189,7 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
     }
 
     protected void startPanel(final IModel<M> model) {
-        wicket.startPanel(new TestPanelSource() {
+        wicket.startPanel(new ITestPanelSource() {
             public Panel getTestPanel(final String panelId) {
                 specifiedComponent = newComponent(panelId, model);
                 return (Panel) specifiedComponent;

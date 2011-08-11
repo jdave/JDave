@@ -11,6 +11,15 @@
   <name>jdave-wicket</name>
   <packaging>jar</packaging>
   
+  <dependencyManagement>
+  	<dependencies>
+  	    <dependency>
+          <groupId>org.apache.wicket</groupId>
+          <artifactId>wicket</artifactId>
+          <version>1.4.18</version>
+      </dependency>
+  	</dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -20,7 +29,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket</artifactId>
-      <version>1.4.5</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
