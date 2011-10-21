@@ -15,6 +15,8 @@
  */
 package jdave.runner;
 
+import org.junit.Ignore;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -39,6 +41,9 @@ public class DefaultSpecIntrospection implements ISpecIntrospection {
             return false;
         }
         if (method.getParameterTypes().length > 0) {
+            return false;
+        }
+        if (method.getAnnotation(Ignore.class) != null) {
             return false;
         }
         return true;

@@ -234,6 +234,11 @@ public class SpecRunnerTest {
                 actualCalls.add("methodWhichTakesParameters");
             }
 
+            @Ignore(value = "this should not be called")
+            public void ignoredMethod() {
+                actualCalls.add("ignoredMethod");
+            }
+
             public void destroy() {
                 destroyCalled++;
             }
