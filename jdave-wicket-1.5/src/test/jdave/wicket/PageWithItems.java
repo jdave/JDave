@@ -33,6 +33,7 @@ import org.apache.wicket.model.Model;
  * @author Joni Freeman
  */
 public class PageWithItems extends WebPage {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public PageWithItems(final IModel<List<Integer>> items) {
         add(new ListView<Integer>("listView", items) {
             @Override
@@ -56,7 +57,7 @@ public class PageWithItems extends WebPage {
                 item.add(new Label("item", item.getModelObject().toString()));
             }
         });
-        add(new WebMarkupContainer("container", new CompoundPropertyModel<List<Integer>>(this))
+        add(new WebMarkupContainer("container", new CompoundPropertyModel(this))
             .add(new WebMarkupContainer("innerContainer")));
     }
 }

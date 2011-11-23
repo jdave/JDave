@@ -38,9 +38,9 @@ import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 import org.apache.wicket.util.tester.BaseWicketTester;
+import org.apache.wicket.util.tester.DummyHomePage;
 import org.apache.wicket.util.tester.ITestPageSource;
 import org.apache.wicket.util.tester.ITestPanelSource;
-import org.apache.wicket.util.tester.BaseWicketTester.DummyWebApplication;
 
 /**
  * A base class for Wicket's <code>Component</code> specifications.
@@ -270,11 +270,11 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
      * Select an item from a <code>ListView</code>.
      */
     public <T> ListItem<T> itemAt(final ListView<T> view, final int index) {
-        final Iterator<? extends ListItem<T>> items = view.iterator();
+        final Iterator<Component> items = view.iterator();
         for (int i = 0; i < index; i++) {
             items.next();
         }
-        return items.next();
+        return (ListItem<T>)items.next();
     }
 
     /**
@@ -383,4 +383,19 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
      * @see #startComponent(IModel)
      */
     protected abstract C newComponent(String id, IModel<M> model);
+    
+    private static class DummyWebApplication extends WebApplication
+     {
+         @Override
+         public Class<? extends Page> getHomePage()
+         {
+             return DummyHomePage.class;
+         }
+ 
+         @Override
+         protected void outputDevelopmentModeWarning()
+         {
+             // Do nothing.
+         }
+     }
 }

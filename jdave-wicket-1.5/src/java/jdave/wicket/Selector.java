@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.Component.IVisitor;
+import org.apache.wicket.util.visit.IVisit;
+import org.apache.wicket.util.visit.IVisitor;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
@@ -58,14 +59,14 @@ public class Selector {
     private <T extends Component, X extends Component> List<X> selectAll(
             final MarkupContainer root, final Class<T> componentType,
             final Matcher<T> componentMatcher) {
-        final CollectingVisitor<T, X> visitor = new CollectingVisitor<T, X>(componentMatcher);
-        return visitor.selectFrom(root, componentType, IVisitor.CONTINUE_TRAVERSAL);
+        final CollectingVisitor<T, X> visitor = new CollectingVisitor<T, X>(componentMatcher, false);
+        return visitor.selectFrom(root, componentType);
     }
 
     private <T extends Component, X extends Component> X selectFirst(final MarkupContainer root,
             final Class<T> componentType, final Matcher<T> componentMatcher) {
-        final CollectingVisitor<T, X> visitor = new CollectingVisitor<T, X>(componentMatcher);
-        final List<X> firstMatch = visitor.selectFrom(root, componentType, IVisitor.STOP_TRAVERSAL);
+        final CollectingVisitor<T, X> visitor = new CollectingVisitor<T, X>(componentMatcher, true);
+        final List<X> firstMatch = visitor.selectFrom(root, componentType);
         if (firstMatch.isEmpty()) {
             return null;
         }
@@ -79,33 +80,33 @@ public class Selector {
                 new WicketIdEqualsTo<T>(wicketId));
     }
 
+    
     /**
      * Not thread safe.
      */
     private class CollectingVisitor<T extends Component, X extends Component> implements
-            IVisitor<T> {
+            IVisitor<T, X> {
         private final Matcher<T> componentMatcher;
         private final List<X> matches = new ArrayList<X>();
-        private Object actionOnMatch;
-
-        public CollectingVisitor(final Matcher<T> componentMatcher) {
+        private final boolean stopAfterFirstMatch;
+        public CollectingVisitor(final Matcher<T> componentMatcher, boolean stopAfterFirstMatch) {
             this.componentMatcher = componentMatcher;
+            this.stopAfterFirstMatch = stopAfterFirstMatch;
         }
 
-        @SuppressWarnings( { "unchecked" })
-        public Object component(final Component component) {
-            if (componentMatcher.matches(component)) {
-                matches.add((X) component);
-                return actionOnMatch;
-            }
-            return CONTINUE_TRAVERSAL;
-        }
-
-        public List<X> selectFrom(final MarkupContainer root, final Class<T> componentType,
-                final Object actionOnMatch) {
-            this.actionOnMatch = actionOnMatch;
+        public List<X> selectFrom(final MarkupContainer root, final Class<T> componentType) {
             root.visitChildren(componentType, this);
             return matches;
+        }
+
+        @SuppressWarnings("unchecked")
+        public void component(T component, IVisit<X> visit) {
+            if (componentMatcher.matches(component)) {
+                matches.add((X) component);
+                if(stopAfterFirstMatch) {
+                    visit.stop((X) component);
+                }
+            }
         }
     }
 }
