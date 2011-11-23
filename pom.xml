@@ -28,6 +28,7 @@
     <module>jdave-junit4</module>
     <module>jdave-wicket</module>
     <module>jdave-wicket-webdriver</module>
+    <module>jdave-wicket-1.5</module>
     <module>jdave-examples</module>
     <module>jdave-report-plugin</module>
   </modules>
