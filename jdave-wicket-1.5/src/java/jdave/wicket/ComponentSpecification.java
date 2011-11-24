@@ -19,8 +19,10 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import jdave.IContainment;
 import jdave.Specification;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.Page;
@@ -39,8 +41,6 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
 import org.apache.wicket.util.tester.BaseWicketTester;
 import org.apache.wicket.util.tester.DummyHomePage;
-import org.apache.wicket.util.tester.ITestPageSource;
-import org.apache.wicket.util.tester.ITestPanelSource;
 
 /**
  * A base class for Wicket's <code>Component</code> specifications.
@@ -178,29 +178,18 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
     }
 
     protected void startBorder(final IModel<M> model) {
-        wicket.startPanel(new ITestPanelSource() {
-            public Panel getTestPanel(final String panelId) {
-                final Panel panel = new Container(panelId);
-                specifiedComponent = newComponent("component", model);
-                panel.add(specifiedComponent);
-                return panel;
-            }
-        });
+        specifiedComponent = newComponent("component", model);
+        wicket.startComponentInPage(specifiedComponent);
     }
 
     protected void startPanel(final IModel<M> model) {
-        wicket.startPanel(new ITestPanelSource() {
-            public Panel getTestPanel(final String panelId) {
-                specifiedComponent = newComponent(panelId, model);
-                return (Panel) specifiedComponent;
-            }
-        });
+        specifiedComponent = newComponent("panel", model);
+        wicket.startComponentInPage(specifiedComponent);
     }
 
     protected void startPage(final IModel<M> model) {
         specifiedComponent = newComponent(null, model);
-        final TestPageSource testPageSource = new TestPageSource((Page) specifiedComponent);
-        wicket.startPage(testPageSource);
+        wicket.startPage((Page) specifiedComponent);
     }
 
     @SuppressWarnings( { "unchecked" })
@@ -208,19 +197,8 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
         return (IModel<X>) model;
     }
 
-    private static class TestPageSource implements ITestPageSource {
-        private final Page page;
-
-        public TestPageSource(final Page page) {
-            this.page = page;
-        }
-
-        public Page getTestPage() {
-            return page;
-        }
-    }
-
     private static class TestPage extends WebPage implements IMarkupResourceStreamProvider {
+        private static final long serialVersionUID = 1L;
         private final IResourceStream markup;
 
         public TestPage(final IResourceStream markup) {
@@ -269,6 +247,7 @@ public abstract class ComponentSpecification<C extends Component, M> extends Spe
     /**
      * Select an item from a <code>ListView</code>.
      */
+    @SuppressWarnings("unchecked")
     public <T> ListItem<T> itemAt(final ListView<T> view, final int index) {
         final Iterator<Component> items = view.iterator();
         for (int i = 0; i < index; i++) {
