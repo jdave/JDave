@@ -17,8 +17,11 @@ package jdave.support;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-
+import jdave.Group;
+import jdave.runner.Groups;
+import junit.framework.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -116,5 +119,44 @@ public class ReflectionTest {
             org.junit.Assert.assertEquals("protected static method 'noSuchMethod' not found",
                     expected.getMessage());
         }
+    }
+
+    @Ignore
+    interface IgnoredInterface { }
+
+    @Group("test")
+    static class GroupImplementsIgnoredInterface implements IgnoredInterface { }
+
+    static class ExtendsGroupImplementsIgnoredInterface extends GroupImplementsIgnoredInterface { }
+
+    @Test
+    public void getAnnotation() {
+        Assert.assertNotNull(Reflection.getAnnotation(IgnoredInterface.class, Ignore.class));
+        Assert.assertNotNull(Reflection.getAnnotation(GroupImplementsIgnoredInterface.class, Ignore.class));
+        Assert.assertNotNull(Reflection.getAnnotation(ExtendsGroupImplementsIgnoredInterface.class, Ignore.class));
+        Assert.assertNotNull(Reflection.getAnnotation(ExtendsGroupImplementsIgnoredInterface.class, Group.class));
+        Assert.assertNull(Reflection.getAnnotation(ExtendsGroupImplementsIgnoredInterface.class, Groups.class));
+    }
+
+    public static class WithPrivateField {
+        private boolean field;
+        public boolean getField() {
+            return field;
+        }
+    }
+    WithPrivateField obj = new WithPrivateField();
+
+    @Test
+    public void setPrivateField() {
+        Reflection.setPrivateField(obj, "field", Boolean.TRUE);
+        Assert.assertTrue(obj.getField());
+    }
+    @Test(expected=RuntimeException.class)
+    public void setPrivateFieldWithWrongObjectTypeThrowsException() {
+        Reflection.setPrivateField(obj, "field", new Object());
+    }
+    @Test(expected=RuntimeException.class)
+    public void setNonExistantFieldThrowsException() {
+        Reflection.setPrivateField(obj, "noField", Boolean.TRUE);
     }
 }

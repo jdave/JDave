@@ -15,10 +15,11 @@
  */
 package jdave.runner;
 
-import org.junit.Ignore;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import jdave.Parallel;
+import jdave.support.Reflection;
+import org.junit.Ignore;
 
 /**
  * @author Joni Freeman
@@ -55,6 +56,11 @@ public class DefaultSpecIntrospection implements ISpecIntrospection {
         }
         if (!hasBehaviors(possibleContext)) {
             return false;
+        }
+        if (Reflection.getAnnotation(possibleContext, Parallel.class) != null) {
+            throw new UnsupportedOperationException(
+                    "@Parallel only supported on Specifications." +
+                    " It was found on context: " + possibleContext);
         }
         return isInnerClass(possibleContext);
     }

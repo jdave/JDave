@@ -16,19 +16,22 @@
 package jdave.runner;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import java.util.concurrent.Callable;
+import jdave.Parallel;
 import jdave.Specification;
+import jdave.support.ParallelExecutor;
+import jdave.support.Reflection;
 
 /**
  * @author Joni Freeman
  * @author Pekka Enberg
+ * @author Kim Blomqvist
  */
 public abstract class Context {
     private final Class<? extends Specification<?>> specType;
     private final Class<?> contextType;
+    private ISpecIntrospection introspection;
+    private ISpecExecutor executor;
 
     public Context(final Class<? extends Specification<?>> specType, final Class<?> contextType) {
         this.specType = specType;
@@ -43,50 +46,56 @@ public abstract class Context {
             Class<? extends Specification<?>> specType, Class<?> contextType);
 
     void run(final ISpecVisitor callback) {
+        final ISpecExecutor runExecutor = getExecutor();
         for (final Method method : ClassMemberSorter.getMethods(contextType)) {
             if (isBehavior(method)) {
-                callback.onBehavior(newBehavior(method, specType, contextType));
+                runExecutor.schedule(new Callable<Void>() {
+                    public Void call() throws Exception {
+                        callback.onBehavior(newBehavior(method, specType, contextType));
+                        return null;
+                    }
+                });
             }
         }
+        runExecutor.getResults();
     }
 
     private boolean isBehavior(final Method method) {
-        return newIntrospection().isBehavior(method);
+        return getIntrospection().isBehavior(method);
     }
 
     public boolean isContextClass() {
-        return newIntrospection().isContextClass(specType, contextType);
+        return getIntrospection().isContextClass(specType, contextType);
     }
 
-    private ISpecIntrospection newIntrospection() {
-        try {
-            Class<?> clazz = specType;
-            do {
-                final Collection<Class<?>> types = typesOf(clazz);
-                for (final Class<?> type : types) {
-                    if (hasStrategy(type)) {
-                        return type.getAnnotation(IntrospectionStrategy.class).value()
-                                .newInstance();
-                    }
-                }
-            } while ((clazz = clazz.getSuperclass()) != null);
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
+    synchronized private ISpecIntrospection getIntrospection() {
+        if (null != introspection) {
+            return introspection;
         }
-        return new DefaultSpecIntrospection();
-    }
-
-    private Collection<Class<?>> typesOf(final Class<?> clazz) {
-        final List<Class<?>> types = new ArrayList<Class<?>>();
-        types.add(clazz);
-        final Class<?>[] interfaces = clazz.getInterfaces();
-        for (final Class<?> anInterface : interfaces) {
-            types.add(anInterface);
+        IntrospectionStrategy strategy = Reflection.getAnnotation(specType, IntrospectionStrategy.class);
+        if (null != strategy) {
+            try {
+                introspection = strategy.value().newInstance();
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            introspection = new DefaultSpecIntrospection();
         }
-        return types;
+        return introspection;
     }
 
-    boolean hasStrategy(final Class<?> type) {
-        return type.isAnnotationPresent(IntrospectionStrategy.class);
+    synchronized protected ISpecExecutor getExecutor() {
+        if (null != executor) {
+            return executor;
+        }
+        Parallel parallelAnnotation = Reflection.getAnnotation(specType, Parallel.class);
+        if (null != parallelAnnotation && parallelAnnotation.behaviourThreads() > 1) {
+            executor = new ParallelExecutor(parallelAnnotation.behaviourThreads());
+        } else {
+            executor = SerialSpecExecutor.getInstance();
+        }
+        return executor;
     }
+
 }

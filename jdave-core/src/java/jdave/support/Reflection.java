@@ -15,9 +15,14 @@
  */
 package jdave.support;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Lasse Koskela
@@ -85,5 +90,55 @@ public class Reflection {
             parameterTypes = new Class[0];
         }
         return Arrays.asList(method.getParameterTypes()).equals(Arrays.asList(parameterTypes));
+    }
+
+    /**
+     * Return annotation found on the class or any of its interfaces, or null if not found.
+     */
+    public static <T extends Annotation> T getAnnotation(Class<?> clazz, Class<T> annotation) {
+        do {
+            final Collection<Class<?>> types = Reflection.typesOf(clazz);
+            for (final Class<?> type : types) {
+                if (type.isAnnotationPresent(annotation)) {
+                    return type.getAnnotation(annotation);
+                }
+            }
+        } while ((clazz = clazz.getSuperclass()) != null);
+        return null;
+    }
+
+    private static Collection<Class<?>> typesOf(final Class<?> clazz) {
+        final List<Class<?>> types = new ArrayList<Class<?>>();
+        types.add(clazz);
+        final Class<?>[] interfaces = clazz.getInterfaces();
+        for (final Class<?> anInterface : interfaces) {
+            types.add(anInterface);
+        }
+        return types;
+    }
+
+    public static void setPrivateField(Object obj, String fieldName, Object newValue) {
+        try {
+            Field field;
+            Class<?> objClass = obj.getClass();
+            while (true) {
+                try {
+                    field = objClass.getDeclaredField(fieldName);
+                    break;
+                } catch (NoSuchFieldException e) {
+                    // Nothing, proceed to try for superclass
+                }
+                objClass = objClass.getSuperclass();
+                if (objClass == null) {
+                    throw new NoSuchFieldException(fieldName);
+                }
+            }
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            field.set(obj, newValue);
+            field.setAccessible(accessible);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set field: " + fieldName + " on: " + obj, e);
+        }
     }
 }

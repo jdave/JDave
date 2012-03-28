@@ -20,10 +20,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.concurrent.Callable;
+import jdave.Parallel;
 import jdave.Specification;
+import jdave.support.ParallelExecutor;
 import jdave.support.Reflection;
-
 import org.junit.Ignore;
 
 /**
@@ -70,17 +71,25 @@ public class SpecRunner {
         }
     }
 
-    private <T extends Specification<?>> void runContexts(Class<T> specType, ISpecVisitor callback) {
-        for (Class<?> contextType : getContextsOf(specType)) {
-            Context context = new Context(specType, contextType) {
-                @Override
-                protected Behavior newBehavior(Method method,
-                        Class<? extends Specification<?>> specType, Class<?> contextType) {
-                    return new ExecutingBehavior(method, specType, contextType);
+    protected <T extends Specification<?>> void runContexts(final Class<T> specType, final ISpecVisitor callback) {
+        ISpecExecutor executor = getExecutor(specType);
+        final SpecRunner self = this;
+        for (final Class<?> contextType : getContextsOf(specType)) {
+            executor.schedule(new Callable<Void>() {
+                public Void call() {
+                    Context context = new Context(specType, contextType) {
+                        @Override
+                        protected Behavior newBehavior(Method method,
+                                Class<? extends Specification<?>> specType, Class<?> contextType) {
+                            return new ExecutingBehavior(method, specType, contextType);
+                        }
+                    };
+                    self.run(callback, context);
+                    return null;
                 }
-            };
-            run(callback, context);
+            });
         }
+        executor.getResults();
     }
 
     private void run(ISpecVisitor callback, Context context) {
@@ -113,4 +122,14 @@ public class SpecRunner {
         }
         return false;
     }
+
+    protected ISpecExecutor getExecutor(final Class<?> specType) {
+        Parallel parallelAnnotation = Reflection.getAnnotation(specType, Parallel.class);
+        if (null != parallelAnnotation && parallelAnnotation.contextThreads() > 1) {
+            return new ParallelExecutor(parallelAnnotation.contextThreads());
+        } else {
+            return SerialSpecExecutor.getInstance();
+        }
+    }
+
 }
