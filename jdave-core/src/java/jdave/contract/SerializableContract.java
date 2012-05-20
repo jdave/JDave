@@ -40,7 +40,7 @@ public class SerializableContract implements IContract {
         try {
             stream.writeObject(obj);
         } catch (IOException e) {
-            throw new ExpectationFailedException(obj + " is not serializable");
+            throw new ExpectationFailedException(obj + " is not serializable", e);
         } finally {
             try {
                 stream.close();
