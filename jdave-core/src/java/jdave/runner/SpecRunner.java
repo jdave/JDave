@@ -51,12 +51,18 @@ public class SpecRunner {
         runOnceAfters(specType);
     }
 
-    private <T extends Specification<?>> void runOnceBefores(Class<T> specType) {
-        runPublicStaticVoidMethodNamed("onceBefore", specType);
+    private <T extends Specification<?>> void runOnceBefores(Class<?> specType) {
+        if (specType != null) {
+          runOnceBefores(specType.getSuperclass());
+          runPublicStaticVoidMethodNamed("onceBefore", specType);
+        }
     }
 
-    private <T extends Specification<?>> void runOnceAfters(Class<T> specType) {
-        runPublicStaticVoidMethodNamed("onceAfter", specType);
+    private <T extends Specification<?>> void runOnceAfters(Class<?> specType) {
+        if (specType != null) {
+          runPublicStaticVoidMethodNamed("onceAfter", specType);
+          runOnceAfters(specType.getSuperclass());
+        }
     }
 
     private <T> void runPublicStaticVoidMethodNamed(String name, Class<T> specType) {
